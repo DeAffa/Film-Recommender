@@ -31,3 +31,76 @@ Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https:/
 Dataset ini berisi informasi mendetail mengenai aplikasi yang tersedia di Google Play Store, mulai dari nama aplikasi, kategori, rating, jumlah ulasan, ukuran file, jumlah unduhan, hingga versi Android yang dibutuhkan. File tersedia dalam format CSV dan memiliki ukuran relatif kecil, sekitar 1 MB. Secara keseluruhan, dataset ini mencakup sekitar **10.840 baris data** dengan **13 kolom fitur**. Meskipun demikian, inspeksi awal terhadap dataset menunjukkan adanya beberapa tantangan, seperti nilai kosong pada kolom penting seperti `Rating` dan `Size`, entri duplikat, format numerik yang tidak seragam (misalnya pada kolom `Installs` dan `Price`), serta keberadaan baris-baris yang tidak valid.
 
 Berikut adalah uraian untuk seluruh fitur yang ada pada dataset "Google Play Store Apps" :
+| Nama Kolom       | Deskripsi                                                              |
+|------------------|------------------------------------------------------------------------|
+| `App`            | Nama aplikasi                                                          |
+| `Category`       | Kategori tempat aplikasi diklasifikasikan (misalnya: GAME, TOOLS, dll) |
+| `Rating`         | Rating rata-rata pengguna (0.0 - 5.0)                                  |
+| `Reviews`        | Jumlah ulasan yang diberikan pengguna                                  |
+| `Size`           | Ukuran file aplikasi (MB atau KB, bisa juga "Varies with device")      |
+| `Installs`       | Jumlah unduhan aplikasi                                                |
+| `Type`           | Jenis aplikasi: Gratis (`Free`) atau Berbayar (`Paid`)                 |
+| `Price`          | Harga aplikasi (jika berbayar, dalam USD)                              |
+| `Content Rating` | Segmentasi umur pengguna aplikasi (Everyone, Teen, dll)                |
+| `Genres`         | Genre tambahan dari aplikasi                                           |
+| `Last Updated`   | Tanggal terakhir pembaruan aplikasi                                    |
+| `Current Ver`    | Versi terbaru dari aplikasi                                            |
+| `Android Ver`    | Minimum versi Android yang dibutuhkan                                  |
+
+Beberapa analisis dan visualisasi awal dilakukan untuk memahami karakteristik data : 
+1.  Distribusi Rating
+-  Rating sebagian besar aplikasi berkisar antara 3.5 hingga 4.5
+-  Terdapat nilai `null` pada kolom `Rating` yang perlu diatasi
+2.  Jumlah Aplikasi per Kategori
+-  Kategori dengan jumlah aplikasi terbanyak adalah **FAMILY**, diikuti oleh **GAME** dan **TOOLS**
+-  Beberapa kategori seperti **BEAUTY** dan **PARENTING** hanya memiliki sedikit aplikasi
+3.  Tipe Aplikasi (Gratis vs Berbayar)
+-  Sekitar 90% aplikasi adalah **Gratis**
+-  Aplikasi berbayar cenderung memiliki harga <$10
+4.  Jumlah Unduhan (Installs)
+-  Terdapat distribusi yang sangat tidak merata
+-  Beberapa aplikasi memiliki >1 miliar unduhan, namun banyak juga aplikasi dengan unduhan <1.000
+5.  Ukuran Aplikasi (Size)
+-  Ukuran aplikasi yang bervariasi dari <1 MB hingga >100 MB
+-  Beberapa entri memliki nilai `Varies with device` yang harus diubah atau disesuaikan
+6.  Genre Aplikasi
+-  Beberapa aplikasi memiliki lebih dari 1 genre
+-  Genre **Tools**, **Entertainment**, dan **Education** merupakan yang paling umum
+
+Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksploratori (EDA), yaitu :
+-  Terdapat dominasi aplikasi gratis, menunjukkan peluang besar untuk monetisasi berbasis iklan.
+-  Sebagian besar aplikasi memiliki rating tinggi, menunjukkan adanya _bias positif_ dalam penilaian pengguna
+-  Jumlah review dan jumlah unduhan bisa digunakan sebagai indikator popularitas dan kepercayaan pengguna
+-  Kategori dan genre bisa menjadi fitur penting dalam pendekatan content-based filtering
+
+## Data Preparation
+Tahap data preparation merupakan langkah penting sebelum membangun sistem rekomendasi, karena kualitas data secara langsung memengaruhi hasil model yang dikembangkan. Dalam proyek ini, dilakukan beberapa teknik dan tahapan data preparation berikut secara berurutan : 
+1.  **Menghapus Duplikasi** : Setelah melakukan inspeksi terhadap dataset secara umum, ditemukan adanya entri aplikasi yang **duplikat** berdasarkan kolom `App` dan `Category`. Duplikasi ini dapat menyebabkan bias pada analisis, terutama jika aplikasi yang sama muncul lebih dari satu kali dengan informasi yang identik atau sedikit berbeda. Maka dari itu, dilakukan penghapusan baris duplikat menggunakan fungsi `drop_duplicates()` untuk memastikan setiap aplikasi hanya direpresentasikan sekali.
+2.  **Menangani Missing Values** : Beberapa fitur penting seperti `Rating`, `Size`, `Type`, dan `Content Rating` memiliki nilai kosong. Pendekatan yang dilakukan :
+-  Menghapus baris yang memiliki `rating` kosong, karena rating merupakan fitur penting dalam analisis
+-  Untuk kolom lain seperti `Size`, missing values diisi dengan nilai rata-rata setelah dikonversi ke satuan yang seragam (MB)
+-  Nilai kosong pada `Type` dan `Content Rating` diisi dengan modus karena hanya memiliki sedikit kategori
+
+Langkah ini penting agar model tidak gagal membaca data dan tetap mendapatkan informasi lengkap dari masing-masing fitur.
+
+3.  **Membersihkan dan Mengonversi Format Data** : Beberapa kolom memilki format yang tidak langsung bisa diolah oleh model :
+-  `Installs` : karakter seperti `+` dan `,` dihapus lalu dikonversi ke integer
+-  `Price` : simbol `$` dihapus dan nilainya dikonversi menjadi float
+-  `Size` : satuan `k` dan `M` diubah ke **MB** dengan asumsi 1k - 0.001MB
+
+Transformasi ini bertujuan agar fitur numerik dapat dianalisis dan digunakan oleh algoritma machine learning secara konsisten.
+
+4.  **Encoding Fitur Kategorikal** : Fitur seperti `Category`, `Type`, `Content Rating`, dan `Genres` merupakan data kategorikal yang tidak bisa langsung digunakan oleh model. Oleh karena itu, dilakukan encoding : 
+-  **Label Encoding** untuk fitur dengan ordinal atau sedikit kategori seperti `Type`
+-  **One-Hot Encoding** digunakan untuk fitur seperti `Category` dan `Genres` yang memiliki banyak variasi dan tidak berurutan.
+
+Encoding diperlukan agar model data memproses data dalam bentuk numerik tanpa kehilangan makna kategorinya.
+
+5.  **Normalisasi Data** : Beberapa fitur numerik seperti `Reviews`, `Installs`, dan `Price` memiliki rentang nilai yang sangat besar dan tidak merata. Oleh karena itu, dilakukan normalisasi (misalnya Min-Max Scalling atau log-transform) agar distribusi data menjadi lebih seimbang. Ini membantu algoritma model memberikan bobot yang adil terhadap masing-masing fitur.
+6.  **Pemisahan Data** : Data dipisahkan menjadi dua bagian :
+-  **Data untuk Content-Based Filtering** : Menggunakan fitur konten aplikasi seperti `Category`, `Genres`, `Rating`, dan lainnya.
+-  **Data untuk Collaborative Filtering** : disiapkan dalam format user-item-rating untuk digunakan dalam pendekatan seperti matrix factorization.
+
+Tanpa tahap data preparation yang baik, model yang dikembangkan dapat menghasilkan prediksi yang tidak akurat atau bias. Proses ini juga membantu mengurangi kesalahan selama training, mempercepat waktu komputasi, dan meningkatkan akurasi model. Data yang bersih, terstruktur, dan terstandarisasi akan lebih mudah dianalisis dan diolah oleh algoritma sistem rekomendasi.
+
+## Modelling

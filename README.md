@@ -26,11 +26,12 @@ Untuk mencapai seluruh tujuan diatas, proyek ini akan mengembangkan dua pendekat
 2.  **Collaborative Filtering** : Sistem ini akan merekomendasikan aplikasi berdasarkan preferensi pengguna lain yang memiliki pola perilaku serupa. Model ini memanfaatkan data interaksi seperti rating, jumlah review, atau frekuensi unduhan sebagai dasar untuk menemukan kemiripan antar pengguna atau antar aplikasi.
 
 ## Data Understanding
-Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://www.kaggle.com/">Kaggle</a> dengan judul <a href="https://www.kaggle.com/datasets/lava18/google-play-store-apps">"Google Play Store Apps" </a> yang dapat diunduh atau diakses melalui tautan berikut : https://www.kaggle.com/datasets/lava18/google-play-store-apps.
+Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://www.kaggle.com/">Kaggle</a> dengan judul <a href="https://www.kaggle.com/datasets/lava18/google-play-store-apps">"Google Play Store Apps" </a> yang terdapat 2 file penting yang akan dipakai yaitu `googleplaystore.csv` dan `googleplaystore_user_reviews.csv`. Berikut adalah penjelasan rinci terkait kedua file tersebut :
+1.  **googleplaystore.csv**
 
 Dataset ini berisi informasi mendetail mengenai aplikasi yang tersedia di Google Play Store, mulai dari nama aplikasi, kategori, rating, jumlah ulasan, ukuran file, jumlah unduhan, hingga versi Android yang dibutuhkan. File tersedia dalam format CSV dan memiliki ukuran relatif kecil, sekitar 1 MB. Secara keseluruhan, dataset ini mencakup sekitar **10.840 baris data** dengan **13 kolom fitur**. Meskipun demikian, inspeksi awal terhadap dataset menunjukkan adanya beberapa tantangan, seperti nilai kosong pada kolom penting seperti `Rating` dan `Size`, entri duplikat, format numerik yang tidak seragam (misalnya pada kolom `Installs` dan `Price`), serta keberadaan baris-baris yang tidak valid.
 
-Berikut adalah uraian untuk seluruh fitur yang ada pada dataset "Google Play Store Apps" :
+Berikut adalah uraian untuk seluruh fitur yang ada pada dataset `googleplaystore.csv` :
 | Nama Kolom       | Deskripsi                                                              |
 |------------------|------------------------------------------------------------------------|
 | `App`            | Nama aplikasi                                                          |
@@ -72,6 +73,33 @@ Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksp
 -  Sebagian besar aplikasi memiliki rating tinggi, menunjukkan adanya _bias positif_ dalam penilaian pengguna
 -  Jumlah review dan jumlah unduhan bisa digunakan sebagai indikator popularitas dan kepercayaan pengguna
 -  Kategori dan genre bisa menjadi fitur penting dalam pendekatan content-based filtering
+
+2.  **googleplaystore_user_reviews.csv**
+
+Dataset `googleplaystore_user_reviews.csv` berisi sebanyak 64.295 data ulasan pengguna terhadap aplikasi yang tersedia di Google Play Store. Terdiri dari lima kolom, yaitu `App`, `Translated_Review`, `Sentiment`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity`, dataset ini memberikan informasi penting terkait persepsi pengguna terhadap aplikasi yang mereka gunakan. Setiap ulasan telah diterjemahkan ke dalam bahasa Inggris dan dikategorikan secara sentimen ke dalam 3 kelompok utama : positif, netral, dan negatif. Nilai `Sentiment_Polarity` dan `Sentiment_Subjectivity` masing-masing menggambarkan seberapa kuat suatu sentimen dan seberapa subjektif opini yang diberikan.
+
+Namun, kondisi data tidak sepenuhnya bersih. Terdapat sejumlah nilai kosong khususnya pada kolom `Translated_Review`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity`, yang dapat memengaruhi kualitas analisis jika tidak ditangani dengan baik. Selain itu, ditemukan juga data duplikat yang harus dihapus untuk menjaga validitas hasil eksplorasi dan model. Beberapa entri aplikasi dalam dataset ini juga tidak memiliki padanan langsung dengan dataset utama (`googleplaystore.csv`), sehingga perlu diselaraskan terlebih dahulu sebelum dilakukan integrasi data lebih lanjut. Dengan pembersihan dan penyelarasan yang tepat, dataset ulasan pengguna ini sangat potensial untuk digunakan dalam sistem rekomendasi berbasis sentimen.
+
+Berikut adalah uraian untuk seluruh fitur yang ada pada dataset `googleplaystore_user_reviews.csv` :
+| Fitur                   | Deskripsi                                         |
+|-------------------------|---------------------------------------------------|
+| `App`                   | Nama aplikasi                                     |
+| `Translated_Review`     | Isi ulasan (dalam Bahasa Inggris)                 |
+| `Sentiment`             | Kategori sentimen (Positive, Neutral, Negative)   |
+| `Sentiment_Polarity`    | Nilai polaritas (-1 sampai 1)                     |
+| `Sentiment_Subjectivity`| Nilai subjektivitas (0 = obyektif, 1 = subjektif) |
+
+Berikut adalah EDA penting yang dapat dilakukan :
+-  **Distribusi Sentimen** : Distribusi kategori sentimen (`Positive`, `Neutral`, `Negative`) membantu memahami bagaimana perasaan pengguna terhadap aplikasi secara umum
+-  **Pola Polaritas Sentimen** : Visualisasi `Sentiment_Polarity` dapat menunjukkan sejauh mana ulasan bersifat sangat positif atau sangat negatif. Hal ini berguna untuk model collaborative filtering berbasis nilai sentimen
+-  **Analisis Subjektivitas** : Distribusi nilai `Sentiment_Subjectivity` dapat memberikan wawasan seberapa obyektif atau subjektif ulasan pengguna
+-  **Ulasan Populer** : Menampilkan aplikasi dengan jumlah ulasan terbanyak atau sentimen paling ekstrem dapat membantu mengidentifikasi aplikasi populer atau kontroversial.
+
+Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksploratori (EDA), yaitu :
+-  **Ulasan Positif** mendominasi dataset ini, menunjukkan bahwa sebagian besar pengguna merasa puas dengan aplikasi yang mereka gunakan
+-  **Sebagian ulasan negatif** justru mengandung nilai polaritas tinggi, menandakan adanya ketidaksesuaian antara kategori sentimen dan nilai polaritas. Ini penting untuk diperiksa lebih lanjut
+-  **Distribusi nilai polaritas** relatif simetris dengan kecenderungan sedikit condong ke arah positif
+-  Beberapa ulasan yang sama muncul berulang kali untuk aplikasi tertentu (indikasi bahwa data perlu dibersihkan dari duplikasi)
 
 ## Data Preparation
 Tahap data preparation merupakan langkah penting sebelum membangun sistem rekomendasi, karena kualitas data secara langsung memengaruhi hasil model yang dikembangkan. Dalam proyek ini, dilakukan beberapa teknik dan tahapan data preparation berikut secara berurutan : 

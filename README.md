@@ -102,32 +102,22 @@ Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksp
 -  Beberapa ulasan yang sama muncul berulang kali untuk aplikasi tertentu (indikasi bahwa data perlu dibersihkan dari duplikasi)
 
 ## Data Preparation
-Tahap data preparation merupakan langkah penting sebelum membangun sistem rekomendasi, karena kualitas data secara langsung memengaruhi hasil model yang dikembangkan. Dalam proyek ini, dilakukan beberapa teknik dan tahapan data preparation berikut secara berurutan : 
-1.  **Menghapus Duplikasi** : Setelah melakukan inspeksi terhadap dataset secara umum, ditemukan adanya entri aplikasi yang **duplikat** berdasarkan kolom `App` dan `Category`. Duplikasi ini dapat menyebabkan bias pada analisis, terutama jika aplikasi yang sama muncul lebih dari satu kali dengan informasi yang identik atau sedikit berbeda. Maka dari itu, dilakukan penghapusan baris duplikat menggunakan fungsi `drop_duplicates()` untuk memastikan setiap aplikasi hanya direpresentasikan sekali.
-2.  **Menangani Missing Values** : Beberapa fitur penting seperti `Rating`, `Size`, `Type`, dan `Content Rating` memiliki nilai kosong. Pendekatan yang dilakukan :
--  Menghapus baris yang memiliki `rating` kosong, karena rating merupakan fitur penting dalam analisis
--  Untuk kolom lain seperti `Size`, missing values diisi dengan nilai rata-rata setelah dikonversi ke satuan yang seragam (MB)
--  Nilai kosong pada `Type` dan `Content Rating` diisi dengan modus karena hanya memiliki sedikit kategori
+Tahap data preparation merupakan langkah penting sebelum membangun sistem rekomendasi, karena kualitas data secara langsung memengaruhi hasil model yang dikembangkan. Dalam proyek ini, dilakukan beberapa teknik dan tahapan data preparation berikut secara berurutan pada masing-masing dataset: 
+1.  **Dataset `googleplaystore`**
+-  **Menghapus Duplikat** : Beberapa entri aplikasi ditemukan lebih dari satu kali. Data duplikat dihapus menggunakan fungsi `drop_duplicates()` untuk memastikan tiap aplikasi hanya diwakili satu baris unik
+-  **Menangani Nilai Kosong** : Kolom seperti `Rating`, `Size`, `Genres`, dan `Current Ver` memiliki missing value. Dan baris dengan nilai kosong pada kolom kritikal seperti `Rating` dihapus.
+-  **Konversi Tipe Data** : `Installs` dan `Price` berisi karakter non-numerik seperti `'+'`, `','`, dan `'$'`, yang dibersihkan untuk konversi ke `int` atau `float`
+-  **Encoding** : Kolom `Type`, `Category`, dan `Content Rating` diubah menjadi label numerik untuk pemrosesan lebih lanjut
 
-Langkah ini penting agar model tidak gagal membaca data dan tetap mendapatkan informasi lengkap dari masing-masing fitur.
+2.  **Dataset `googleplaystore_user_reviews`** 
+-  **Menghapus Duplikat** : Beberapa ulasan terduplikasi dihapus untuk menjaga representasi opini pengguna tetap proporsional
+-  **Menangani Nilai Kosong** : Baris dengan `NaN` pada `Sentiment`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity` dihapus karena mengganggu proses analisis sentimen
+-  **Encoding** : Kolom `Sentiment` (Positive, Neutral, Negative) dikonversi ke label numerik (`1`, `0`, `-1`) agar dapat digunakan pada proses integrasi ke sistem rekomendasi berbasis sentimen.
 
-3.  **Membersihkan dan Mengonversi Format Data** : Beberapa kolom memilki format yang tidak langsung bisa diolah oleh model :
--  `Installs` : karakter seperti `+` dan `,` dihapus lalu dikonversi ke integer
--  `Price` : simbol `$` dihapus dan nilainya dikonversi menjadi float
--  `Size` : satuan `k` dan `M` diubah ke **MB** dengan asumsi 1k - 0.001MB
-
-Transformasi ini bertujuan agar fitur numerik dapat dianalisis dan digunakan oleh algoritma machine learning secara konsisten.
-
-4.  **Encoding Fitur Kategorikal** : Fitur seperti `Category`, `Type`, `Content Rating`, dan `Genres` merupakan data kategorikal yang tidak bisa langsung digunakan oleh model. Oleh karena itu, dilakukan encoding : 
--  **Label Encoding** untuk fitur dengan ordinal atau sedikit kategori seperti `Type`
--  **One-Hot Encoding** digunakan untuk fitur seperti `Category` dan `Genres` yang memiliki banyak variasi dan tidak berurutan.
-
-Encoding diperlukan agar model data memproses data dalam bentuk numerik tanpa kehilangan makna kategorinya.
-
-5.  **Normalisasi Data** : Beberapa fitur numerik seperti `Reviews`, `Installs`, dan `Price` memiliki rentang nilai yang sangat besar dan tidak merata. Oleh karena itu, dilakukan normalisasi (misalnya Min-Max Scalling atau log-transform) agar distribusi data menjadi lebih seimbang. Ini membantu algoritma model memberikan bobot yang adil terhadap masing-masing fitur.
-6.  **Pemisahan Data** : Data dipisahkan menjadi dua bagian :
--  **Data untuk Content-Based Filtering** : Menggunakan fitur konten aplikasi seperti `Category`, `Genres`, `Rating`, dan lainnya.
--  **Data untuk Collaborative Filtering** : disiapkan dalam format user-item-rating untuk digunakan dalam pendekatan seperti matrix factorization.
+Tahapan _data preparation_ sangat penting karena : 
+-  **Konsistensi dan Kualitas Data** : Duplikasi dan missing values bisa menyebabkan bias atau error dalam proses analisis dan pelatihan model
+-  **Kompatibilitas Data dengan Model** : Beberapa algoritma hanya menerima input numerik atau format tertentu. Oleh karena itu, konversi dan encoding diperlukan.
+-  **Kesiapan Integrasi antar Dataset** : Dengan struktur data yang seragam dan bersih, kedua dataset bisa digabungkan (merge) untuk membuat sistem rekomendasi yang lebih cerdas, misalnya sistem hybrid berbasis konten dan sentimen pengguna.
 
 Tanpa tahap data preparation yang baik, model yang dikembangkan dapat menghasilkan prediksi yang tidak akurat atau bias. Proses ini juga membantu mengurangi kesalahan selama training, mempercepat waktu komputasi, dan meningkatkan akurasi model. Data yang bersih, terstruktur, dan terstandarisasi akan lebih mudah dianalisis dan diolah oleh algoritma sistem rekomendasi.
 

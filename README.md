@@ -1,29 +1,32 @@
 # Laporan Proyek Machine Learning - Muhammad Daffa Nurahman
 
 ## Project Overview
-Dengan semakit pesatanya perkembangan teknologi dan penetrasi smartphone, jumlah aplikasi yang tersedia di toko aplikasi seperti Google Play Store terus meningkat secara signifikan. Menurut <a href="https://www.statista.com/statistics/276623/number-of-apps-available-in-leading-app-stores/">Statista </a>, pada tahun 2024, jumlah aplikasi di Google Play Store telah melampaui 3 juta. Banyaknya pilihan ini membuat pengguna kesulitan menemukan aplikasi yang sesuai dengan kebutuhan dan preferensi mereka.
-Salah satu solusi untuk mengatasi mesalah ini adalah membangun sistem rekomendasi aplikasi. Sistem ini membantu pengguna menemukan aplikasi yang relevan berdasarkan ketertarikan atau perilaku pengguna menemukan aplikasi yang relevan berdasarkan ketertarikan atau perilaku pengguna lain. Sistem rekomendasi telah terbukti sangat efektif dalam berbagai platform digital seperti Netflix, Amazon, dan Spotify, dan kini menjadi kebutuhan penting juga dalam ekosistem aplikasi mobile.
+Dalam era digital saat ini, industri video game berkembang pesat dengan ribuan judul game baru dirilis setiap tahunnya. Platform distribusi digital seperti Steam menjadi pusat utama bagi para gamer untuk menemukan, membeli, dan memainkan game. Namun, dengan jumlah game yang sangat banyak, pengguna sering mengalami kesulitan dalam menemukan game yang sesuai dengan preferensi mereka. Dalam konteks inilah sistem rekomendasi memainkan peran penting. Sistem rekomendasi membantu menyaring informasi dan memberikan saran produk atau konten yang paling relevan bagi pengguna. Dalam dunia game, sistem ini dapat menyarankan judul game berdasarkan genre, riwayat permainan, rating, serta preferensi pengguna lainnya. 
 
-Tanpa sistem rekomendasi yang efektif, pengguna beresiko mengalami informasi yang berlebihan yang berdampak pada menurunnya pengalaman pengguna, waktu pencarian aplikasi yang lebih lama, dan potensi aplikasi bagus yang tidak pernah ditemukan.Proyek ini penting karena dapat membantu meningkatkan pengalaman pengguna dengan menyajikan rekomendasi yang lebih relevan, sekaligus mendukung pengembang aplikasi dalam menjangkau audiens yang tepat secara lebih efisien. Namun, membangun sistem rekomendasi yang akurat dan efisien bukanlah hal yang mudah. Pendekatan content-based filtering hanya mempertimbangkan atribut aplikasi, sementara collaborative filtering membutuhkan data interaksi pengguna yang kadang tidak tersedia. Oleh karena itu, pendekatan **hybrid filtering**, yang menggabungkan keunggulan keduanya, menjadi alternatif yang menarik untuk dikembangkan.
+Dengan sistem rekomendasi yang baik dapat meningkatkan pengalaman pengguna, mempercepat proses penemuan game baru, dan pada akhirnya meningkatkan loyalitas pengguna terhadap platform. Bagi pengembang dan distributor game, sistem rekomendasi juga berperan dalam strategi pemasaran dan peningkatan penjualan. Dengan mengembangkan sistem rekomendasi berbasis hybrid filtering menggunakan dataset dari Steam, proyek ini tidak hanya memberikan solusi terhadap masalah kelebihan informasi (_information overload_), tetapi juga dapat menjadi studi kasus nyata dalam penerapan machine learning dan data mining untuk industri hiburan digital
 
 ## Business Understanding
-Di era digital saat ini, pengguna smartphone dihadapkan pada jutaan aplikasi yang tersedia di platform seperti Google Play Store. Hal ini menyebabkan tantangan besar dalam menemukan aplikasi yang sesuai dengan preferensi, kebutuhan dan minat pengguna. Tanpa bantuan sistem yang cerdas, pengguna harus secara manual mencari dan menyeleksi aplikasi, yang dapat memakan waktu, tidak efisien, dan mengarah pada pengalaman pengguna yang buruk. Beberapa masalah yang diidentifikasi adalah :
--  Fitur pencarian bawaan pada toko aplikasi seringkali tidak memberikan hasil yang personal
--  Pengguna baru (cold-start users) tidak mendapatkan rekomendasi yang akurat karena tidak memiliki riwayat interaksi
--  Aplikasi berkualitas rendah bisa mendapatkan visibilitas lebih tinggi daripada aplikasi yang lebih relevan secara personal
+Dengan semakin banyaknya game yang tersedia di platform seperti Steam, pengguna sering kesulitan dalam menemukan game yang sesuai dengan minat dan preferensinya. Meskipun Steam telah menyediakan sistem rekomendasi bawaan, hasil rekomendasi terkadang kurang personal atau lebih bergantung pada popularitas umum. Hal ini menyebabkan pengalaman pengguna tidak optimal, serta potensi game indie atau kurang populer menjadi tidak tereksplorasi. 
 
-Tujuan utama dari proyek ini adalah untuk mengembangkan sistem rekomendasi aplikasi mobile yang mampu memberikan saran aplikasi kepada pengguna berdasarkan : 
--  Kesamaan konten aplikasi
--  Preferensi dan perilaku pengguna lain terhadap aplikasi tertentu
+Masalah utama yang ingin diselesaikan dalam proyek ini adalah :
+-  Bagaimana membangun sistem rekomendasi game yang mampu menyesuaikan saran berdasarkan karakteristik pengguna dan konten game?
+-  Bagaimana menggabungkan pendekatan _content-based filtering_ dan _collaborative filtering_ agar rekomendasi lebih relevan dan personal?
 
-Secara khusus proyek ini bertujuan untuk :
--  Meningkatkan kualitas rekomendasi aplikasi yang diberikan kepada pengguna
--  Mengatasi masalah cold-start dengan memanfaatkan informasi konten aplikasi
--  Menerapkan pendekatan hybrud filtering yang menggabungkan content-based collaborative filtering untuk memperoleh hasil rekomendasi yang lebih akurat dan personal
+Tujuan atau Goals dari proyek ini adalah : 
+-  Membangun sistem rekomendasi hybrid yang dapat menyarankan video game berdasarkan preferensi pengguna dan kemiripan konten game
+-  Meningkatkan relevansi hasil rekomendasi dengan menggabungkan kekuatan dari dua pendekatan populer : _content-based filteing_ dan _collaborative filtering_
+-  Mengurangi kelemahan masing-masing pendekatan, seperti cold-start problem dan overspecialization
 
-Untuk mencapai seluruh tujuan diatas, proyek ini akan mengembangkan dua pendekatan utama yang kemudian dapat digabungkan sebagai sistem hybrid : 
-1.  **Content-Based Filtering** : Pendekatan ini merekomendasikan aplikasi berdasarkan kemiripan fitur antar aplikasi. Sistem akan menganalisis deskripsi, genre, dan kategori dari aplikasi yang pernah dilihat atau disukai pengguna, lalu mencari aplikasi lain dengan karakteristik serupa.
-2.  **Collaborative Filtering** : Sistem ini akan merekomendasikan aplikasi berdasarkan preferensi pengguna lain yang memiliki pola perilaku serupa. Model ini memanfaatkan data interaksi seperti rating, jumlah review, atau frekuensi unduhan sebagai dasar untuk menemukan kemiripan antar pengguna atau antar aplikasi.
+Untuk mencapai pada tujuan proyek ini mengusulkan 2 pendekatan umum : 
+1.  **Content-Based Filtering** : Pada pendekatan ini, sistem akan merekomendasikan game yang memiliki kemiripan konten dengan game yang pernah disukai atau dimainkan oleh pengguna. Fitur-fitur konten yang akan digunakan antara lain :
+-  Genre game (Action, Adventure, RPG, dll)
+-  Developer atau publisher
+
+Metode ini akan mengandalkan teknik representasi teks seperti TF-IDF atau CountVectorizer untuk mengubah konten game menjadi vektor numerik, lalu menghitung kemiripan antar game menggunakan _cosine similarity_
+
+2.  **Collaborative Filtering** : Pendekatan ini menggunakan interaksi antar pengguna (misalnya rating atau ulasan) untuk merekomendasikan game. Sistem ini bekerja berdasarkan kesamaan antara pengguna (user-based) atau antara item (item-based). Karena data Steam biasanya berisi review atau waktu bermain (playtime), pendekatan ini dapat memanfaatkan matrix user-item interaksi, lalu menerapkan teknik seperti :
+-  **Matrix Factorization** (misalnya SVD)
+-  **K-Nearest Neighbors (KNN)** untuk mencari user/item serupa
 
 ## Data Understanding
 Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://www.kaggle.com/">Kaggle</a> dengan judul <a href="https://www.kaggle.com/datasets/lava18/google-play-store-apps">"Google Play Store Apps" </a> yang terdapat 2 file penting yang akan dipakai yaitu `googleplaystore.csv` dan `googleplaystore_user_reviews.csv`. Berikut adalah penjelasan rinci terkait kedua file tersebut :

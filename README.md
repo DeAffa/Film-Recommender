@@ -29,99 +29,56 @@ Metode ini akan mengandalkan teknik representasi teks seperti TF-IDF atau CountV
 -  **K-Nearest Neighbors (KNN)** untuk mencari user/item serupa
 
 ## Data Understanding
-Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://www.kaggle.com/">Kaggle</a> dengan judul <a href="https://www.kaggle.com/datasets/lava18/google-play-store-apps">"Google Play Store Apps" </a> yang terdapat 2 file penting yang akan dipakai yaitu `googleplaystore.csv` dan `googleplaystore_user_reviews.csv`. Berikut adalah penjelasan rinci terkait kedua file tersebut :
-1.  **googleplaystore.csv**
+Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://www.kaggle.com/">Kaggle</a> dengan judul <a href="https://www.kaggle.com/datasets/lava18/google-play-store-apps">"Steam Store Games Dataset" </a>. Dataset ini menyajikan informasi metadata dari lebih dari 27.000 game yang tersedia di platform distribusi digital Steam, yang mencakup berbagai aspek seperti nama game, tanggal rilis, genre, developer, publisher, jumlah review, serta estimasi waktu bermain dan jumlah pemilik game.
 
-Dataset ini berisi informasi mendetail mengenai aplikasi yang tersedia di Google Play Store, mulai dari nama aplikasi, kategori, rating, jumlah ulasan, ukuran file, jumlah unduhan, hingga versi Android yang dibutuhkan. File tersedia dalam format CSV dan memiliki ukuran relatif kecil, sekitar 1 MB. Secara keseluruhan, dataset ini mencakup sekitar **10.840 baris data** dengan **13 kolom fitur**. Meskipun demikian, inspeksi awal terhadap dataset menunjukkan adanya beberapa tantangan, seperti nilai kosong pada kolom penting seperti `Rating` dan `Size`, entri duplikat, format numerik yang tidak seragam (misalnya pada kolom `Installs` dan `Price`), serta keberadaan baris-baris yang tidak valid.
+Secara umum dataset ini terdiri dari 19 kolom fitur yang menggambarkan karakteristik konten game dan respons pengguna. Beberapa kolom penting antara lain `genres`, `categories`, dan `steamspy_tags` yang mencerminkan isi atau tipe game, serta `positive_ratings`, `negative_ratings`, dan `average_playtime` yang merepresentasikan interaksi atau pengalaman pengguna terhadap game tersebut. Dataset ini juga menyertakan data harga(`price`) dan platform pendukung (Windows, Mac, Linux) untuk masing-masing game. Dari hasil observasi awal, beberapa fitur memiliki nilai kosong (missing values) seperti pada kolom `release_date`, `price`, dan `publisher`, serta terdapat fitur-fitur bertipe teks kompleks yang mengandung nilai jamak, misalnya genre dan kategori game yang dipisahkan dengan tanda koma.
 
-Berikut adalah uraian untuk seluruh fitur yang ada pada dataset `googleplaystore.csv` :
-| Nama Kolom       | Deskripsi                                                              |
-|------------------|------------------------------------------------------------------------|
-| `App`            | Nama aplikasi                                                          |
-| `Category`       | Kategori tempat aplikasi diklasifikasikan (misalnya: GAME, TOOLS, dll) |
-| `Rating`         | Rating rata-rata pengguna (0.0 - 5.0)                                  |
-| `Reviews`        | Jumlah ulasan yang diberikan pengguna                                  |
-| `Size`           | Ukuran file aplikasi (MB atau KB, bisa juga "Varies with device")      |
-| `Installs`       | Jumlah unduhan aplikasi                                                |
-| `Type`           | Jenis aplikasi: Gratis (`Free`) atau Berbayar (`Paid`)                 |
-| `Price`          | Harga aplikasi (jika berbayar, dalam USD)                              |
-| `Content Rating` | Segmentasi umur pengguna aplikasi (Everyone, Teen, dll)                |
-| `Genres`         | Genre tambahan dari aplikasi                                           |
-| `Last Updated`   | Tanggal terakhir pembaruan aplikasi                                    |
-| `Current Ver`    | Versi terbaru dari aplikasi                                            |
-| `Android Ver`    | Minimum versi Android yang dibutuhkan                                  |
+Berikut adalah fitur yang ada pada dataset `steam.csv` : 
+| Nama Fitur         | Tipe Data | Deskripsi                                    |
+|--------------------|-----------|----------------------------------------------|
+| `appid`            | Integer   | ID unik untuk tiap game                      |
+| `name`             | String    | Nama game                                    |
+| `release_date`     | String    | Tanggal rilis game                           |
+| `english`          | Integer   | 1 jika game berbahasa Inggris, 0 jika tidak  |
+| `developer`        | String    | Nama developer game                          |
+| `publisher`        | String    | Nama publisher game                          |
+| `platforms`        | String    | Platform yang didukung (Windows, Mac, Linux) |
+| `required_age`     | Integer   | Batasan usia minimal                         |
+| `categories`       | String    | Kategori (Single-player, Multi-player, dll)  |
+| `genres`           | String    | Genre game (Action, RPG, Strategy, dll)      |
+| `steamspy_tags`    | String    | Tag dari pengguna berdasarkan SteamSpy       |
+| `achievements`     | Integer   | Jumlah achievement                           |
+| `positive_ratings` | Integer   | Jumlah review positif dari user              |
+| `negative_ratings` | Integer   | Jumlah review negatif dari user              |
+| `average_playtime` | Integer   | Rata-rata waktu bermain (menit)              |
+| `median_playtime`  | Integer   | Median waktu bermain (menit)                 |
+| `price`            | Float     | Harga game dalam USD                         |
+| `owners`           | String    | Estimasi jumlah pemilik game                 |
 
-Beberapa analisis dan visualisasi awal dilakukan untuk memahami karakteristik data : 
-1.  Distribusi Rating
--  Rating sebagian besar aplikasi berkisar antara 3.5 hingga 4.5
--  Terdapat nilai `null` pada kolom `Rating` yang perlu diatasi
-2.  Jumlah Aplikasi per Kategori
--  Kategori dengan jumlah aplikasi terbanyak adalah **FAMILY**, diikuti oleh **GAME** dan **TOOLS**
--  Beberapa kategori seperti **BEAUTY** dan **PARENTING** hanya memiliki sedikit aplikasi
-3.  Tipe Aplikasi (Gratis vs Berbayar)
--  Sekitar 90% aplikasi adalah **Gratis**
--  Aplikasi berbayar cenderung memiliki harga <$10
-4.  Jumlah Unduhan (Installs)
--  Terdapat distribusi yang sangat tidak merata
--  Beberapa aplikasi memiliki >1 miliar unduhan, namun banyak juga aplikasi dengan unduhan <1.000
-5.  Ukuran Aplikasi (Size)
--  Ukuran aplikasi yang bervariasi dari <1 MB hingga >100 MB
--  Beberapa entri memliki nilai `Varies with device` yang harus diubah atau disesuaikan
-6.  Genre Aplikasi
--  Beberapa aplikasi memiliki lebih dari 1 genre
--  Genre **Tools**, **Entertainment**, dan **Education** merupakan yang paling umum
+Berikut adalah beberapa tahapan eksplorasi data dan visualisasi : 
+1.  **Distribusi Genre Game** : Dilakukan analisis frekuensi terhadap kolom `genres` untuk mengetahui jenis game yang paling umum tersedia di platform Steam. Visualisasi menggunakan bar chart
+2.  **Distribusi Harga Game** : Histogram digunakan untuk melihat persebaran harga game. Data harga juga ditelusuri untuk melihat proporsi game yang gratis (free-to-play)
+3.  **Distribusi Rating Positif dan Negatif** : Scatter plot atau histogram digunakan untuk menggambarkan hubungan antara `positive_ratings` dan `negative_ratings`
+4.  **Rata-rata Waktu Bermain (Playtime)** : Histogram dan boxplot digunakan untuk melihat sebaran waktu bermain rata-rata (`average_playtime`), serta mencari outlier seperti game dengan waktu main tinggi
+5.  **Korelasi Antar Fitur Numerik** : Heatmap korelasi digunakan untuk melihat hubungan antar variabel seperti `price`, `playtime`, dan `ratings`
 
-Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksploratori (EDA), yaitu :
--  Terdapat dominasi aplikasi gratis, menunjukkan peluang besar untuk monetisasi berbasis iklan.
--  Sebagian besar aplikasi memiliki rating tinggi, menunjukkan adanya _bias positif_ dalam penilaian pengguna
--  Jumlah review dan jumlah unduhan bisa digunakan sebagai indikator popularitas dan kepercayaan pengguna
--  Kategori dan genre bisa menjadi fitur penting dalam pendekatan content-based filtering
-
-2.  **googleplaystore_user_reviews.csv**
-
-Dataset `googleplaystore_user_reviews.csv` berisi sebanyak 64.295 data ulasan pengguna terhadap aplikasi yang tersedia di Google Play Store. Terdiri dari lima kolom, yaitu `App`, `Translated_Review`, `Sentiment`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity`, dataset ini memberikan informasi penting terkait persepsi pengguna terhadap aplikasi yang mereka gunakan. Setiap ulasan telah diterjemahkan ke dalam bahasa Inggris dan dikategorikan secara sentimen ke dalam 3 kelompok utama : positif, netral, dan negatif. Nilai `Sentiment_Polarity` dan `Sentiment_Subjectivity` masing-masing menggambarkan seberapa kuat suatu sentimen dan seberapa subjektif opini yang diberikan.
-
-Namun, kondisi data tidak sepenuhnya bersih. Terdapat sejumlah nilai kosong khususnya pada kolom `Translated_Review`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity`, yang dapat memengaruhi kualitas analisis jika tidak ditangani dengan baik. Selain itu, ditemukan juga data duplikat yang harus dihapus untuk menjaga validitas hasil eksplorasi dan model. Beberapa entri aplikasi dalam dataset ini juga tidak memiliki padanan langsung dengan dataset utama (`googleplaystore.csv`), sehingga perlu diselaraskan terlebih dahulu sebelum dilakukan integrasi data lebih lanjut. Dengan pembersihan dan penyelarasan yang tepat, dataset ulasan pengguna ini sangat potensial untuk digunakan dalam sistem rekomendasi berbasis sentimen.
-
-Berikut adalah uraian untuk seluruh fitur yang ada pada dataset `googleplaystore_user_reviews.csv` :
-| Fitur                   | Deskripsi                                         |
-|-------------------------|---------------------------------------------------|
-| `App`                   | Nama aplikasi                                     |
-| `Translated_Review`     | Isi ulasan (dalam Bahasa Inggris)                 |
-| `Sentiment`             | Kategori sentimen (Positive, Neutral, Negative)   |
-| `Sentiment_Polarity`    | Nilai polaritas (-1 sampai 1)                     |
-| `Sentiment_Subjectivity`| Nilai subjektivitas (0 = obyektif, 1 = subjektif) |
-
-Berikut adalah EDA penting yang dapat dilakukan :
--  **Distribusi Sentimen** : Distribusi kategori sentimen (`Positive`, `Neutral`, `Negative`) membantu memahami bagaimana perasaan pengguna terhadap aplikasi secara umum
--  **Pola Polaritas Sentimen** : Visualisasi `Sentiment_Polarity` dapat menunjukkan sejauh mana ulasan bersifat sangat positif atau sangat negatif. Hal ini berguna untuk model collaborative filtering berbasis nilai sentimen
--  **Analisis Subjektivitas** : Distribusi nilai `Sentiment_Subjectivity` dapat memberikan wawasan seberapa obyektif atau subjektif ulasan pengguna
--  **Ulasan Populer** : Menampilkan aplikasi dengan jumlah ulasan terbanyak atau sentimen paling ekstrem dapat membantu mengidentifikasi aplikasi populer atau kontroversial.
-
-Secara umum, terdapat berbagai temuan awal yang menarik dari hasil analisis eksploratori (EDA), yaitu :
--  **Ulasan Positif** mendominasi dataset ini, menunjukkan bahwa sebagian besar pengguna merasa puas dengan aplikasi yang mereka gunakan
--  **Sebagian ulasan negatif** justru mengandung nilai polaritas tinggi, menandakan adanya ketidaksesuaian antara kategori sentimen dan nilai polaritas. Ini penting untuk diperiksa lebih lanjut
--  **Distribusi nilai polaritas** relatif simetris dengan kecenderungan sedikit condong ke arah positif
--  Beberapa ulasan yang sama muncul berulang kali untuk aplikasi tertentu (indikasi bahwa data perlu dibersihkan dari duplikasi)
+Dan berikut adalah beberapa temuan atau insight yang didapat dari hasil eksplorasi data : 
+1.  Genre game paling banyak adalah **Action**, **Indie**, dan **Adventure**, menunjukkan preferensi umum pengguna dan keragaman genre yang tinggi
+2.  Sebagian besar game memiliki harga dibawah $20 dan banyak juga yang berstatus gratis. Ini menjadi faktor penting dalam filtering rekomendasi
+3.  Game denga review negatif tinggi seringkali juga memiliki review positif tinggi, menunjukkan popularitas tidak selalu berarti kualitas bagus bagi semua pemain
+4.  Sebagian besar game dimainkan dalam waktu yang relatif singkat, namun terdapat outlier dengan waktu main sangat panjang (contohnya game multiplayer kompetitif seperti Dota 2)
+5.  Korelasi antara harga dan playtime cukup rendah, menandakan bahwa mahalnya game tidak menjamin tingkat keterlibatan pengguna
 
 ## Data Preparation
-Tahap data preparation merupakan langkah penting sebelum membangun sistem rekomendasi, karena kualitas data secara langsung memengaruhi hasil model yang dikembangkan. Dalam proyek ini, dilakukan beberapa teknik dan tahapan data preparation berikut secara berurutan pada masing-masing dataset: 
-1.  **Dataset `googleplaystore`**
--  **Menghapus Duplikat** : Beberapa entri aplikasi ditemukan lebih dari satu kali. Data duplikat dihapus menggunakan fungsi `drop_duplicates()` untuk memastikan tiap aplikasi hanya diwakili satu baris unik
--  **Menangani Nilai Kosong** : Kolom seperti `Rating`, `Size`, `Genres`, dan `Current Ver` memiliki missing value. Dan baris dengan nilai kosong pada kolom kritikal seperti `Rating` dihapus.
--  **Konversi Tipe Data** : `Installs` dan `Price` berisi karakter non-numerik seperti `'+'`, `','`, dan `'$'`, yang dibersihkan untuk konversi ke `int` atau `float`
--  **Encoding** : Kolom `Type`, `Category`, dan `Content Rating` diubah menjadi label numerik untuk pemrosesan lebih lanjut
+Tahap _data preparation_ merupakan proses penting yang bertujuan untuk memastikan data dalam kondisi siap digunakan untuk pemodelan sistem rekomendasi. Dataset Steam yang digunakan masih dalam kondisi mentah, sehingga perlu dilakukan beberapa langkah pemberishan dan transformasi data sebelum masuk ke tahap selanjutnya. Proses ini juga memastikan bahwa data sesuai untuk digunakan baik pendekatan **Content-Based Filtering (CBF)** maupun **Collaborative Filtering (CF)**.
 
-2.  **Dataset `googleplaystore_user_reviews`** 
--  **Menghapus Duplikat** : Beberapa ulasan terduplikasi dihapus untuk menjaga representasi opini pengguna tetap proporsional
--  **Menangani Nilai Kosong** : Baris dengan `NaN` pada `Sentiment`, `Sentiment_Polarity`, dan `Sentiment_Subjectivity` dihapus karena mengganggu proses analisis sentimen
--  **Encoding** : Kolom `Sentiment` (Positive, Neutral, Negative) dikonversi ke label numerik (`1`, `0`, `-1`) agar dapat digunakan pada proses integrasi ke sistem rekomendasi berbasis sentimen.
+Berikut ini adalah tahapan _data preparation_ yang dilakukan, beserta penjelasan dan alasannya : 
+1.  **Menghapus Duplikasi dan Data Kosong yang Tidak Relevan** : Langkah pertama adalah menghapus data duplikat dan entri yang memiliki nilai kosong (missing values) pada kolom-kolom penting seperti `genres`, `positive_ratings`, dan `average_playtime`. Kolom-kolom ini sangat berpengaruh pada kedua pendekatan yang digunakan dalam proyek ini. Data yang tidak lengkap dapat mengurangi akurasi sistem rekomendasi dan menyebabkan bias selama pelatihan model
+2.  **Pembersihan dan Normalisasi Kolom Teks** : Kolom `genres`, `categories`, dan `steamspy_tags` merupakan fitur teks yang perlu diproses terlebih dahulu. Pada tahap ini dilakukan normalisasi sederhana seperti konversi ke huruf kecil dan penghapusan spasi ekstra. Hal ini penting untuk memastikan konsistensi format dan mempermudah proses ekstraksi fitur konten nantinya, terutama saat menggunakan metode TF-IDF pada pendekatan CBF
+3.  **Penambahan Fitur Boolean** : Untuk memperkaya data, ditambahkan fitur baru bernama `is_free` yang merepresentasikan apakah game tersebut gratis atau tidak. Fitur ini diambil berdasarkan nilai harga (`price`). Informasi ini dapat membantu model memahami preferensi pengguna terhadap game gratis dan berbayar, serta memungkinkan penggunaan sebagai fitur filter tambahan pada sistem rekomendasi
+4.  **Normalisasi Fitur Numerik** : Fitur numerik seperti `positive_ratings`, `negative_ratings`, `average_playime`, dan `price` memiliki rentang nilai yang sangat bervariasi. Oleh karena itu, dilakukan proses normalisasi untuk menyamakan skala data. Normalisasi ini penting agar model tidak bias terhadap fitur yang memiliki skalah lebih besar, terutama pada pendekatan CF yang bergantung pada kesamaan antar item atau pengguna
+5.  **Ekstraksi Fitur Genre Menggunakan TF-IDF** : Untuk pendekatan COntent-Based FIltering, dilakukan ekstraksi fitur dari kolom `genres` menggunakan teknik TF-IDF (Term Frequency-Inverse Document Frequency). Hasil dari proses ini adalah representasi vektor dari genre yang memungkinkan perhitungan kemiripan antar game berdasarkan kontennya. Teknik ini dipilih karena cukup efektif dalam menangkap informasi penting dari data berbasis teks
+6.  **Simulasi Interaksi Pengguna untuk Collaborative FIltering** : Karena tidak tersedia data eksplisit interaksi pengguna dalam dataset ini, dilakukan pendekatan simulasi dengan membuat kombinasi pengguna dan game menggunakan `positive_ratings` sebagai proksi dari rating atau preferensi. Dataset kemudian disiapkan dalam format user-item matrix untuk digunakan dalam pendekatan CF. Ini memungkinkan sistem melakukan rekomendasi berdasarkan pola pengguna lain yang menunjukkan kesamaan perilaku
 
-Tahapan _data preparation_ sangat penting karena : 
--  **Konsistensi dan Kualitas Data** : Duplikasi dan missing values bisa menyebabkan bias atau error dalam proses analisis dan pelatihan model
--  **Kompatibilitas Data dengan Model** : Beberapa algoritma hanya menerima input numerik atau format tertentu. Oleh karena itu, konversi dan encoding diperlukan.
--  **Kesiapan Integrasi antar Dataset** : Dengan struktur data yang seragam dan bersih, kedua dataset bisa digabungkan (merge) untuk membuat sistem rekomendasi yang lebih cerdas, misalnya sistem hybrid berbasis konten dan sentimen pengguna.
-
-Tanpa tahap data preparation yang baik, model yang dikembangkan dapat menghasilkan prediksi yang tidak akurat atau bias. Proses ini juga membantu mengurangi kesalahan selama training, mempercepat waktu komputasi, dan meningkatkan akurasi model. Data yang bersih, terstruktur, dan terstandarisasi akan lebih mudah dianalisis dan diolah oleh algoritma sistem rekomendasi.
 
 ## Modelling

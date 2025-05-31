@@ -80,5 +80,47 @@ Berikut ini adalah tahapan _data preparation_ yang dilakukan, beserta penjelasan
 5.  **Ekstraksi Fitur Genre Menggunakan TF-IDF** : Untuk pendekatan COntent-Based FIltering, dilakukan ekstraksi fitur dari kolom `genres` menggunakan teknik TF-IDF (Term Frequency-Inverse Document Frequency). Hasil dari proses ini adalah representasi vektor dari genre yang memungkinkan perhitungan kemiripan antar game berdasarkan kontennya. Teknik ini dipilih karena cukup efektif dalam menangkap informasi penting dari data berbasis teks
 6.  **Simulasi Interaksi Pengguna untuk Collaborative FIltering** : Karena tidak tersedia data eksplisit interaksi pengguna dalam dataset ini, dilakukan pendekatan simulasi dengan membuat kombinasi pengguna dan game menggunakan `positive_ratings` sebagai proksi dari rating atau preferensi. Dataset kemudian disiapkan dalam format user-item matrix untuk digunakan dalam pendekatan CF. Ini memungkinkan sistem melakukan rekomendasi berdasarkan pola pengguna lain yang menunjukkan kesamaan perilaku
 
-
 ## Modelling
+Pada bagian ini, dibangun dua sistem rekomendasi yang berbeda untuk menyelesaikan permasalahan bagaimana memberikan rekomendasi game kepada pengguna berdasarkan preferensi dan karakteristik game. Dua pendekatan yang digunakan adalah :
+1.  **Content-Based Filtering (CBF)** : Pendekatan ini merekomendasikan game berdasarkan kemiripan konten dengan game yang disukai sebelumnya. Sistem menggunakan representasi TF-IDF dari genre game untuk menghitung kesamaan antar game.
+Proses :
+-  TF-IDF digunakan untuk mengekstraksi fitur dari kolom `genres`
+-  Digunakan cosine similarity untuk mengukur kemiripan antar game.
+-  Jika pengguna menyukai satu game tertentu, maka sistem akan mencari game lain yang memiliki genre mirip
+
+**Output : Top-5 Recommendation (contoh)** : Misal pengguna menyukai game "**Counter-Strike**", maka sistem akan merekomendasikan : 
+1.  Day of Defeat
+2.  Ricochet
+3.  Deathmatch Classic
+4.  Team Fortress Classic
+5.  Half-life
+
+Kelebihan : 
+-  Tidak membutuhkan data interkasi pengguna
+-  Mampu memberikan rekomendasi bahkan untuk pengguna baru (cold-start problem untuk user bisa diatasi)
+
+Kekurangan : 
+-  Rekomendasi terbatas pada kemiripan konten
+-  Kurang mampu menangkap prefrensi komunitas secara umum
+
+2.  **Collaborative Filtering** : Pendekatan ini merekomendasikan game berdasarkan interaksi pengguna lain yang memiliki preferensi serupa. Model ini menggunakan matrix user-item dari interaksi (simulasi) dan pendekatan **user-based** collaborative filtering
+
+Proses : 
+-  Dibuat matriks user-game dari data `ratings_df`
+-  Menggunakan NearestNeighbors untuk mencari pengguna serupa
+-  Game yang disukai oleh pengguna serupa akan direkomendasikan kepada pengguna target
+
+**Output : Top-5 Recommendation(contoh)** : Untuk pengguna simulasi `user_id = 101`, sistem dapat merekomendasikan : 
+1.  Left 4 Dead 2
+2.  Portal 2
+3.  Garry's Mod
+4.  Team Fortress 2
+5.  The Elder Scrolls V: Skyrim
+
+Kelebihan : 
+-  Menangkap selera kolektif dari banyak pengguna
+-  Rekomendasi lebih personal karena mempertimbangkan perilaku pengguna
+
+Kekurangan :
+-  Tidak bekerja optimal jika data interaksi sedikit (sparse)
+-  Tidak dapat merekomendasikan item baru (cold-start problem untuk item)

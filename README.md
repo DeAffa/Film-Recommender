@@ -124,3 +124,5 @@ Kelebihan :
 Kekurangan :
 -  Tidak bekerja optimal jika data interaksi sedikit (sparse)
 -  Tidak dapat merekomendasikan item baru (cold-start problem untuk item)
+
+# Evaluation

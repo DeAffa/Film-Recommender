@@ -81,48 +81,31 @@ Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam pro
 
 
 ## Modelling
-Pada bagian ini, dibangun dua sistem rekomendasi yang berbeda untuk menyelesaikan permasalahan bagaimana memberikan rekomendasi game kepada pengguna berdasarkan preferensi dan karakteristik game. Dua pendekatan yang digunakan adalah :
-1.  **Content-Based Filtering (CBF)** : Pendekatan ini merekomendasikan game berdasarkan kemiripan konten dengan game yang disukai sebelumnya. Sistem menggunakan representasi TF-IDF dari genre game untuk menghitung kesamaan antar game.
-Proses :
--  TF-IDF digunakan untuk mengekstraksi fitur dari kolom `genres`
--  Digunakan cosine similarity untuk mengukur kemiripan antar game.
--  Jika pengguna menyukai satu game tertentu, maka sistem akan mencari game lain yang memiliki genre mirip
+Untuk menjawab kebutuhan pengguna dalam menemukan film yang relevan dengan preferensi mereka, sistem rekomendasi dibangun menggunakan dua pendekatan utama : **Content-Based Filtering (CBF)** dan **Collaborative Filtering (CF)**. Kedua pendekatan ini dirancang untuk menyajikan rekomendasi film yang sesuai berdasarkan informasi yang tersedia pada data MovieLens 1M.
+-    **Content-Based Filtering (CBF)** merekomendasikan film berdasarkan kemiripan konten, dalam hal ini genre film.
+-    **Collaborative Filtering (CF)** merekomendasikan film berdasarkan kesamaan preferensi antar pengguna.
 
-**Output : Top-5 Recommendation (contoh)** : Misal pengguna menyukai game "**Counter-Strike**", maka sistem akan merekomendasikan : 
-1.  Day of Defeat
-2.  Ricochet
-3.  Deathmatch Classic
-4.  Team Fortress Classic
-5.  Half-life
+Kedua sistem dirancang untuk menghasilkan rekomendasi **Top-N film** yang dapat membantu pengguna menemukan film baru yang sesuai dengan selera mereka.
 
-Kelebihan : 
--  Tidak membutuhkan data interkasi pengguna
--  Mampu memberikan rekomendasi bahkan untuk pengguna baru (cold-start problem untuk user bisa diatasi)
+Sistem ini menghasilkan rekomendasi **Top-5 film** untuk pengguna tertentu. Hasil dari kedua pendekatan disajikan secara terpisah untuk menunjukkan perbedaan logika dan hasil rekomendasi.
+-    **Content-Based Filtering (CBF) - Top-5 Rekomendasi** (Contoh)
+        1.    The Matrix(1999)
+        2.    Terminator 2:Judgement Day(1991)
+        3.    Starship Troopers(1997)
+        4.    Independence Day(1996)
+        5.    Total Recall(1990)
 
-Kekurangan : 
--  Rekomendasi terbatas pada kemiripan konten
--  Kurang mampu menangkap prefrensi komunitas secara umum
+-    **Collaborative Filtering (CF) - Top-5 Rekomendasi** (Contoh)
+        1.    Star Wars: Episode V - The Empire Strikes Back(1980)
+        2.    Toy Story(1995)
+        3.    Jurassic Park(1993)
+        4.    Back to the Future(1985)
+        5.    Men in Black(1997)
 
-2.  **Collaborative Filtering** : Pendekatan ini merekomendasikan game berdasarkan interaksi pengguna lain yang memiliki preferensi serupa. Model ini menggunakan matrix user-item dari interaksi (simulasi) dan pendekatan **user-based** collaborative filtering
+| Pendekatan                  | Kelebihan                                                                                 | Kekurangan                                                                                                                     |
+|----------------------------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| **Content-Based Filtering** | Tidak memerlukan data dari pengguna lain, dapat bekerja untuk pengguna baru (cold-start). | Rekomendasi bisa terlalu sempit jika kontennya homogen, tidak bisa merekomendasikan di luar preferensi awal.                 |
+| **Collaborative Filtering** | Mampu menemukan film yang tidak terduga namun relevan berdasarkan pola komunitas.         | Tidak bisa bekerja dengan baik untuk pengguna baru atau item baru (cold-start problem), bergantung pada kepadatan data rating. |
 
-Proses : 
--  Dibuat matriks user-game dari data `ratings_df`
--  Menggunakan NearestNeighbors untuk mencari pengguna serupa
--  Game yang disukai oleh pengguna serupa akan direkomendasikan kepada pengguna target
-
-**Output : Top-5 Recommendation(contoh)** : Untuk pengguna simulasi `user_id = 101`, sistem dapat merekomendasikan : 
-1.  Left 4 Dead 2
-2.  Portal 2
-3.  Garry's Mod
-4.  Team Fortress 2
-5.  The Elder Scrolls V: Skyrim
-
-Kelebihan : 
--  Menangkap selera kolektif dari banyak pengguna
--  Rekomendasi lebih personal karena mempertimbangkan perilaku pengguna
-
-Kekurangan :
--  Tidak bekerja optimal jika data interaksi sedikit (sparse)
--  Tidak dapat merekomendasikan item baru (cold-start problem untuk item)
 
 # Evaluation

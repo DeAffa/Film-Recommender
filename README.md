@@ -70,6 +70,12 @@ Tahap _data preparation_ merupakan proses penting yang bertujuan untuk memastika
 -    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif
 -    **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
 -    **Penyederhanaan Genre** : Kolom `Genres` berisi lebih dari satu genre yang digabungkan dengan tanda "|". Untuk mempermudah analisis dan mempercepat komputasi, dilakukan penyaringan data hanya pada **3 Genre Terpopuler**
+-    **Filter Eksklusif Genre (Genre Khusus)** : Sebagai langkah lanjutan, dilakukan filter **eksklusif** untuk hanya menyertakan film-film yang memiliki **satu atau kombinasi** dari **tiga genre utama tertinggi/terpopuler**, yaitu :
+        -    `Action`
+        -    `Comedy`
+        -    `Drama`
+ 
+Artinya, hanya kombinasi genre berikut yang diizinkan : 
 -    **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
 -    **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
 

@@ -67,17 +67,27 @@ Dan berikut adalah beberapa temuan atau insight yang didapat dari hasil eksplora
 
 ## Data Preparation
 Tahap _data preparation_ merupakan proses penting yang bertujuan untuk memastikan data dalam kondisi siap digunakan untuk pemodelan sistem rekomendasi. Tanpa data yang bersih dan terstruktur dengan baik, model rekomendasi tidak dapat bekerja secara optimal. Oleh karena itu, dilakukan serangkaian langkah transformasi dan pembersihan data secara sistematis. Berikut adalah tahapan yang dilakukan, dan disusun secara berurutan : 
--    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif
--    **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
--    **Penyederhanaan Genre** : Kolom `Genres` berisi lebih dari satu genre yang digabungkan dengan tanda "|". Untuk mempermudah analisis dan mempercepat komputasi, dilakukan penyaringan data hanya pada **3 Genre Terpopuler**
--    **Filter Eksklusif Genre (Genre Khusus)** : Sebagai langkah lanjutan, dilakukan filter **eksklusif** untuk hanya menyertakan film-film yang memiliki **satu atau kombinasi** dari **tiga genre utama tertinggi/terpopuler**, yaitu :
+1.    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif
+2.   **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
+3.   **Penyederhanaan Genre** : Kolom `Genres` berisi lebih dari satu genre yang digabungkan dengan tanda "|". Untuk mempermudah analisis dan mempercepat komputasi, dilakukan penyaringan data hanya pada **3 Genre Terpopuler**
+4.   **Filter Eksklusif Genre (Genre Khusus)** : Sebagai langkah lanjutan, dilakukan filter **eksklusif** untuk hanya menyertakan film-film yang memiliki **satu atau kombinasi** dari **tiga genre utama tertinggi/terpopuler**, yaitu :
         -    `Action`
         -    `Comedy`
         -    `Drama`
  
-Artinya, hanya kombinasi genre berikut yang diizinkan : 
--    **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
--    **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
+Hanya film dengan kombinasi seperti `Action`, `Comedy|Drama`, atau `Action|Comedy|Drama` yang dipertahankan. Film dengan genre diluar kategori tersebut, atau yang memiliki gabungan genre lain seperti `Action|Thriller` atau `Comedy|Romance`, **dikeluarkan dari dataset**. Filter ini bertujuan untuk : 
+
+-    Menyederhanakan data agar lebih fokus dan tidak terlalu bervariasi
+-    Mengurangi jumlah variabel unik genre yang harus diproses dalam sistem rekomendasi
+-    Menghindari lonjakan kompleksitas dan konsumsi memori saat modeling
+
+5.    **Filter Berdasarkan Aktivitas Pengguna (Top 500 User)** : Untuk mengatasi keterbatasan memori dan menghindari sparsity ekstrem, dilakukan penyaringan data pengguna. Dari keseluruhan data rating, dihitung total rating yang diberikan oleh masing-masing pengguna. Kemudia dipilih **500 pengguna teratas** dengan aktivitas rating terbanyak. Hanya data dari pengguna-pengguna ini yang dipertahankan, dan seluruh film yang pernah mereka beri rating tetap dipertahankan selama memenuhi fitur genre sebelumnya. Langkah ini bertujuan untuk :
+-    Mengoptimalkan efisiensi memori dan kecepatan komputasi
+-    Memastikan model dilatih pada data dari pengguna aktif
+-    Menghindari noise dari pengguna pasif (dengan rating sedikit)
+
+6.   **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
+7.   **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
 
 Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam proyek ini :
 -    Menjamin **kebersihan dan konsistensi data** sebelum digunakan untuk pemodelan
@@ -87,31 +97,37 @@ Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam pro
 
 
 ## Modelling
-Untuk menjawab kebutuhan pengguna dalam menemukan film yang relevan dengan preferensi mereka, sistem rekomendasi dibangun menggunakan dua pendekatan utama : **Content-Based Filtering (CBF)** dan **Collaborative Filtering (CF)**. Kedua pendekatan ini dirancang untuk menyajikan rekomendasi film yang sesuai berdasarkan informasi yang tersedia pada data MovieLens 1M.
--    **Content-Based Filtering (CBF)** merekomendasikan film berdasarkan kemiripan konten, dalam hal ini genre film.
--    **Collaborative Filtering (CF)** merekomendasikan film berdasarkan kesamaan preferensi antar pengguna.
+Untuk menyelesaikan permasalah dalam proyek ini, dibangun dua model sistem rekomendasi dengan pendekatan yang berbeda, yaitu : 
+-    **Content-Based Filtering (CBF)**
+-    **Collaborative Filtering (CF)**
 
-Kedua sistem dirancang untuk menghasilkan rekomendasi **Top-N film** yang dapat membantu pengguna menemukan film baru yang sesuai dengan selera mereka.
+Kedua model dirancang untuk menyarankan film kepada pengguna berdasarkan kriteria tertentu. Pendekatan CBF merekomendasikan film mirip dengan film yang disukai pengguna, sedangkan CF memanfaatkan pola perilaku pengguna lain yang serupa untuk memberikan rekomendasi. Dataset telah difilter menggunakan genre eksklusif dan hanya menyertakan 500 pengguna dengan aktivitas rating terbanyak untuk menjaga efisiensi memori 
 
-Sistem ini menghasilkan rekomendasi **Top-5 film** untuk pengguna tertentu. Hasil dari kedua pendekatan disajikan secara terpisah untuk menunjukkan perbedaan logika dan hasil rekomendasi.
--    **Content-Based Filtering (CBF) - Top-5 Rekomendasi** (Contoh)
-        1.    The Matrix(1999)
-        2.    Terminator 2:Judgement Day(1991)
-        3.    Starship Troopers(1997)
-        4.    Independence Day(1996)
-        5.    Total Recall(1990)
+**Model 1 : Content-Based Filtering (CBF)** : Model CBF menghitung kemiripan antar film berdasarkan genre. Genre diformat ulang menjadi vektor TF-IDF, lalu dihitung kemiripannya menggunakan `linear_kernel`
 
--    **Collaborative Filtering (CF) - Top-5 Rekomendasi** (Contoh)
-        1.    Star Wars: Episode V - The Empire Strikes Back(1980)
-        2.    Toy Story(1995)
-        3.    Jurassic Park(1993)
-        4.    Back to the Future(1985)
-        5.    Men in Black(1997)
+**Input** : _Film : Amadeus (1984)"_
 
-| Pendekatan                  | Kelebihan                                                                                 | Kekurangan                                                                                                                     |
-|----------------------------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| **Content-Based Filtering** | Tidak memerlukan data dari pengguna lain, dapat bekerja untuk pengguna baru (cold-start). | Rekomendasi bisa terlalu sempit jika kontennya homogen, tidak bisa merekomendasikan di luar preferensi awal.                 |
-| **Collaborative Filtering** | Mampu menemukan film yang tidak terduga namun relevan berdasarkan pola komunitas.         | Tidak bisa bekerja dengan baik untuk pengguna baru atau item baru (cold-start problem), bergantung pada kepadatan data rating. |
+**Output Rekomendasi :**
+-    Pleasantville (1998)
+-    Raising Arizona (1987)
+-    White Men Can't Jump (1992)
+-    Being John Malkovich (1999)
+-    Fierce Creatures (1997)
 
+**Model 2 : Collaborative Filtering (CF)** : Model CF menggunakan pendekatan **User-Based Filtering**. Menggunakan user-item matrix dari 500 pengguna paling aktif, model menghitung kemiripan antar pengguna untuk memberikan rekomendasi berdasarkan perilaku rating pengguna serupa.
+
+**Input** : _UserID : 26_
+
+**Output Rekomendasi :**
+-    The Shawshank Redemption (1994)
+-    One Flew Over the Cuckoo's Nest (1975)
+-    Monty Pythin and the Holy Grail (1974)
+-    Ferris Bueller's Day Off (1986)
+-    Citizen Kane (1941)
+
+| Pendekatan                  | Kelebihan                                                                                             | Kekurangan                                                              |
+|----------------------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| **Content-Based Filtering** | - Tidak memerlukan data pengguna lain <br> - Cocok untuk pengguna baru <br> - Proses cepat dan ringan | - Kurang variasi rekomendasi <br> - Terbatas pada informasi item saja   |
+| **Collaborative Filtering** | - Rekomendasi lebih bervariasi <br> - Menggali pola sosial pengguna                                   | - Membutuhkan banyak data rating <br> - Tidak cocok untuk pengguna baru |
 
 # Evaluation

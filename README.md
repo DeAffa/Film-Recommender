@@ -86,15 +86,19 @@ Hanya film dengan kombinasi seperti `Action`, `Comedy|Drama`, atau `Action|Comed
 -    Memastikan model dilatih pada data dari pengguna aktif
 -    Menghindari noise dari pengguna pasif (dengan rating sedikit)
 
-6.   **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
-7.   **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
+6.    **Filter Berdasarkan Rating Tertinggi (Rating == 5)** : Hal ini bertujuan untuk :
+-    Mengasumsikan bahwa hanya rating tertinggi (5) yang mencerminkan preferensi kuat pengguna
+-    Meningkatkan kualitas hasil evaluasi dalam model rekomendasi dengan hanya mempertimbangkan interaksi positif yang sangat kuat
+-    Menyederhanakan metrik evaluasi seperti _Precision@K_ dengan menganggap relevansi hanya pada rating tertinggi
+
+7.   **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
+8.   **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
 
 Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam proyek ini :
 -    Menjamin **kebersihan dan konsistensi data** sebelum digunakan untuk pemodelan
 -    Menyederhanakan data agar **relevan** dengan pendekatan yang digunakan
 -    Menghindari **noise** dari kolom yang tidak berguna
 -    Menyesuaikan format data dengan kebutuhan algoritma, misalnya **TF-IDF** untuk CBF dan **user-item matrix** untuk CF
-
 
 ## Modelling
 Untuk menyelesaikan permasalah dalam proyek ini, dibangun dua model sistem rekomendasi dengan pendekatan yang berbeda, yaitu : 
@@ -130,4 +134,3 @@ Kedua model dirancang untuk menyarankan film kepada pengguna berdasarkan kriteri
 | **Content-Based Filtering** | - Tidak memerlukan data pengguna lain <br> - Cocok untuk pengguna baru <br> - Proses cepat dan ringan | - Kurang variasi rekomendasi <br> - Terbatas pada informasi item saja   |
 | **Collaborative Filtering** | - Rekomendasi lebih bervariasi <br> - Menggali pola sosial pengguna                                   | - Membutuhkan banyak data rating <br> - Tidak cocok untuk pengguna baru |
 
-# Evaluation

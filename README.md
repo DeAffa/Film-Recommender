@@ -67,30 +67,15 @@ Dan berikut adalah beberapa temuan atau insight yang didapat dari hasil eksplora
 
 ## Data Preparation
 Tahap _data preparation_ merupakan proses penting yang bertujuan untuk memastikan data dalam kondisi siap digunakan untuk pemodelan sistem rekomendasi. Tanpa data yang bersih dan terstruktur dengan baik, model rekomendasi tidak dapat bekerja secara optimal. Oleh karena itu, dilakukan serangkaian langkah transformasi dan pembersihan data secara sistematis. Berikut adalah tahapan yang dilakukan, dan disusun secara berurutan : 
-1.    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif
-2.   **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
-3.   **Penyederhanaan Genre** : Kolom `Genres` berisi lebih dari satu genre yang digabungkan dengan tanda "|". Untuk mempermudah analisis dan mempercepat komputasi, dilakukan penyaringan data hanya pada **3 Genre Terpopuler**
-4.   **Filter Eksklusif Genre (Genre Khusus)** : Sebagai langkah lanjutan, dilakukan filter **eksklusif** untuk hanya menyertakan film-film yang memiliki **satu atau kombinasi** dari **tiga genre utama tertinggi/terpopuler**, yaitu :
-        -    `Action`
-        -    `Comedy`
-        -    `Drama`
- 
-Hanya film dengan kombinasi seperti `Action`, `Comedy|Drama`, atau `Action|Comedy|Drama` yang dipertahankan. Film dengan genre diluar kategori tersebut, atau yang memiliki gabungan genre lain seperti `Action|Thriller` atau `Comedy|Romance`, **dikeluarkan dari dataset**. Filter ini bertujuan untuk : 
-
--    Menyederhanakan data agar lebih fokus dan tidak terlalu bervariasi
--    Mengurangi jumlah variabel unik genre yang harus diproses dalam sistem rekomendasi
--    Menghindari lonjakan kompleksitas dan konsumsi memori saat modeling
-
-5.    **Filter Berdasarkan Aktivitas Pengguna (Top 500 User)** : Untuk mengatasi keterbatasan memori dan menghindari sparsity ekstrem, dilakukan penyaringan data pengguna. Dari keseluruhan data rating, dihitung total rating yang diberikan oleh masing-masing pengguna. Kemudia dipilih **500 pengguna teratas** dengan aktivitas rating terbanyak. Hanya data dari pengguna-pengguna ini yang dipertahankan, dan seluruh film yang pernah mereka beri rating tetap dipertahankan selama memenuhi fitur genre sebelumnya. Langkah ini bertujuan untuk :
+1.    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif dan hanya menambah kompleksitas data.
+2.    **Melihat Genre Teratas** : Langkah ini dilakukan untuk memahami distribusi genre dalam dataset. Proses ini dilakukan dengan menghitung frekuensi masing-masing genre yang bertujuan untuk mengetahui genre yang paling populer diantara pengguna.
+3.    **Mengambil Data Film dengan Genre Teratas** : Setelah mengetahui genre terpopuler, dilakukan penyaringan data film berdasarkan genre tersebut. Hanya film dengan genre `Drama` yang diambil untuk dijadikan fokus dalam model
+4.   **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
+5.   **Filtering Data hanya dengan Rating 5** : Hal ini dimaksudkan untuk menyoroti preferensi tertinggi pengguna terhadap film tertentu, karena rating 5 menunjukkan ketertarikan yang kuat dan bisa dijadikan indikator utama dalam rekomendasi yang lebih tepat sasaran.
+6.    **Filter Berdasarkan Aktivitas Pengguna (Top 500 User)** : Untuk mengatasi keterbatasan memori dan menghindari sparsity ekstrem, dilakukan penyaringan data pengguna. Dari keseluruhan data rating, dihitung total rating yang diberikan oleh masing-masing pengguna. Kemudia dipilih **500 pengguna teratas** dengan aktivitas rating terbanyak. Hanya data dari pengguna-pengguna ini yang dipertahankan, dan seluruh film yang pernah mereka beri rating tetap dipertahankan selama memenuhi fitur genre sebelumnya. Langkah ini bertujuan untuk :
 -    Mengoptimalkan efisiensi memori dan kecepatan komputasi
 -    Memastikan model dilatih pada data dari pengguna aktif
 -    Menghindari noise dari pengguna pasif (dengan rating sedikit)
-
-6.    **Filter Berdasarkan Rating Tertinggi (Rating == 5)** : Hal ini bertujuan untuk :
--    Mengasumsikan bahwa hanya rating tertinggi (5) yang mencerminkan preferensi kuat pengguna
--    Meningkatkan kualitas hasil evaluasi dalam model rekomendasi dengan hanya mempertimbangkan interaksi positif yang sangat kuat
--    Menyederhanakan metrik evaluasi seperti _Precision@K_ dengan menganggap relevansi hanya pada rating tertinggi
-
 7.   **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
 8.   **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
 

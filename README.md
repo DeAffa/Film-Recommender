@@ -128,6 +128,9 @@ Setelah dilakukan pelatihan model selama 100 epoch dengan pembagian data latih d
 
 Nilai ini menunjukkan bahwa model mampu memprediksi rating yang mendekati nilai aktual dengan kesalahan rata-rata dibawah 1 poin dari skala rating
 
-![Hasil Evaluasi Model](images/eval_result.png)
+![Hasil Evaluasi Model RMSE dan MAE](images/eval_result.png)
 
-Hasil evaluasi menunjukkan bahwa model Collaborative Filtering berbasis embedding cukup efektif dalam mempelajari preferensi pengguna dan membuat prediksi yang akurat. Meskipun masih terdapat ruang untuk peningkatan, seperti dengan menambahkan teknik regularisasi atau mengoptimalkan huperparameter, model ini sudah mampu memberikan rekomendasi awal yang dapat diterapkan untuk mendukung pengambilan keputusan pengguna.
+Hasil evaluasi menunjukkan bahwa model Collaborative Filtering berbasis embedding cukup efektif dalam mempelajari preferensi pengguna dan membuat prediksi yang akurat. Meskipun masih terdapat ruang untuk peningkatan, seperti dengan menambahkan teknik regularisasi atau mengoptimalkan hyperparameter, model ini sudah mampu memberikan rekomendasi awal yang dapat diterapkan untuk mendukung pengambilan keputusan pengguna.
+
+Berikut adalah plot history training dan validation loss : 
+![Training dan Validation Loss](images/loss_val.png)

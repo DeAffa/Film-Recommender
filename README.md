@@ -25,7 +25,11 @@ Untuk mencapai pada tujuan proyek ini mengusulkan 2 pendekatan umum :
 
 2.  **Collaborative Filtering** : CF merekomendasikan film berdasarkan pola perilaku pengguna lain. Jika dua pengguna memiliki preferensi yang serupa, maka film yang disukai oleh satu pengguna dapat direkomendasikan kepada pengguna lainnya. Dalam proyek ini digunakan pendekatan user-based dan/atau item-based collaborative filtering, berdasarkan data rating dari MovieLens 1M.
 
-Dengan menggabungkan kedua pendekatan ini, diharapkan sistem rekomendasi yang dibangun dapat lebih akurat dan fleksibel dalam memberikan saran film, baik kepada pengguna baru maupun pengguna aktif.
+Namun dalam proyek ini, pendekatan yang digunakan adalah **Collaborative Filtering**. Pendekatan ini dipilih karena : 
+-    Tidak memerlukan fitur tambahan dari film seperti genre atau sinopsis yang terkadang tidak lengkap
+-    Mampu menangkap pola kompleks dalam preferensi pengguna melalui analisis rating
+-    Lebih efektif jika jumlah data interaksi pengguna cukup banyak dan beragam
+
 
 ## Data Understanding
 Dataset yang digunakan dalam proyek ini bersumber dari platform <a href="https://grouplens.org/">GroupLens Research</a> dengan judul <a href="https://grouplens.org/datasets/movielens/1m/">"MovieLens 1M" </a>. Dataset ini merupakan salah satu dataset populer yang banyak digunakan untuk penelitian dan pengembangan sistem rekomendasi. Dataset MovieLens 1M terdiri dari data rating film yang diberikan oleh sekitar 6.000 pengguna terhadap 4.000 lebih film. Dataset ini terdiri dari tiga file utama dengan struktur sebagai berikut : 
@@ -65,19 +69,17 @@ Dan berikut adalah beberapa temuan atau insight yang didapat dari hasil eksplora
 3.  **Genre film paling banyak ditemukan adalah Drama, Comedy, dan Thriller** : Keberagaman genre ini sangat membantu untuk penerapan pendekatan content-based filtering dengan fitur genre sebagai representasi konten film.
 4.  **Data rating yang padat namun masih mengandung sparsity cukup tinggi** : Meskipun jumlah total rating mencapai lebih dari satu juta, sebagian besar pengguna hanya menilai sebagian kecil film. Ini menuntut penggunaan metode rekomendasi yang mampu mengatasi sparsity agar hasil rekomendasi tetap relevan.
 
-## Data Preparation
-Tahap _data preparation_ merupakan proses penting yang bertujuan untuk memastikan data dalam kondisi siap digunakan untuk pemodelan sistem rekomendasi. Tanpa data yang bersih dan terstruktur dengan baik, model rekomendasi tidak dapat bekerja secara optimal. Oleh karena itu, dilakukan serangkaian langkah transformasi dan pembersihan data secara sistematis. Berikut adalah tahapan yang dilakukan, dan disusun secara berurutan : 
+## Data Preparation :
+Pada tahap ini, dilakukan beberapa teknik _data preparation_ agar data yang digunakan dapat mendukung proses pemodelan sistem rekomendasi berbasis **Collaborative Filtering**. Seluruh teknik disusun secara berurutan sesuai proses implementasi yang dilakukan di notebook dan dijelaskan berikut ini : 
+
 1.    **Menghapus Kolom yang Tidak Relevan** : Beberapa kolom seperti `Gender`, `Age`, `Occupation`, `Zip-code`, dan `Timestamp` dihapus karena tidak memberikan kontribusi yang signifikan terhadap pembuatan sistem rekomendasi berbasis konten maupun kolaboratif dan hanya menambah kompleksitas data.
-2.    **Melihat Genre Teratas** : Langkah ini dilakukan untuk memahami distribusi genre dalam dataset. Proses ini dilakukan dengan menghitung frekuensi masing-masing genre yang bertujuan untuk mengetahui genre yang paling populer diantara pengguna.
-3.    **Mengambil Data Film dengan Genre Teratas** : Setelah mengetahui genre terpopuler, dilakukan penyaringan data film berdasarkan genre tersebut. Hanya film dengan genre `Drama` yang diambil untuk dijadikan fokus dalam model
-4.   **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
-5.   **Filtering Data hanya dengan Rating 5** : Hal ini dimaksudkan untuk menyoroti preferensi tertinggi pengguna terhadap film tertentu, karena rating 5 menunjukkan ketertarikan yang kuat dan bisa dijadikan indikator utama dalam rekomendasi yang lebih tepat sasaran.
-6.    **Filter Berdasarkan Aktivitas Pengguna (Top 500 User)** : Untuk mengatasi keterbatasan memori dan menghindari sparsity ekstrem, dilakukan penyaringan data pengguna. Dari keseluruhan data rating, dihitung total rating yang diberikan oleh masing-masing pengguna. Kemudia dipilih **500 pengguna teratas** dengan aktivitas rating terbanyak. Hanya data dari pengguna-pengguna ini yang dipertahankan, dan seluruh film yang pernah mereka beri rating tetap dipertahankan selama memenuhi fitur genre sebelumnya. Langkah ini bertujuan untuk :
--    Mengoptimalkan efisiensi memori dan kecepatan komputasi
--    Memastikan model dilatih pada data dari pengguna aktif
--    Menghindari noise dari pengguna pasif (dengan rating sedikit)
-7.   **Menyiapkan Data untuk Collaborative Filtering** : Membuat _pivot table_ untuk memetakan UserID ke MovieID dengan isi berupa rating. Karena matriks ini merupakan input utama untuk pendekatan Collaborative Filtering berbasis matriks (user-item matrix)
-8.   **Menyiapkan Data untuk Content-Based Filtering** : Mengubah genre menjadi representasi berbasis teks (TF-IDF vectorization). Karen sistem CBF membutuhkan representasi numerik dari konten film (genre) agar bisa menghitung kemiripan antar film
+2.   **Menggabungkan Dataset** : Ketiga DataFrame digabungkan menggunakan kolom `UserID` dan `MovieID` sebagai kunci penggabungan. Hasil penggabungan ini menghasilkan satu DataFrame komprehensif yang berisi informasi pengguna, film, dan rating.
+3.   **Filtering Data dengan Rating >= 3** : Data kemudian difilter agar hanya mencakup rating dengan nilai **3 ke atas**. Hal ini bertujuan untuk mempertahankan hanya interaksi positif antara pengguna dan item, karena Collaborative Filtering membutuhkan sinyal preferensi yang kuat untuk menghasilkan rekomendasi yang lebih akurat
+4.    **Filter Berdasarkan Aktivitas Pengguna (Top 500 User)** : Untuk meningkatkan kualitas pelatihan model, hanya 500 pengguna paling aktif (berdasarkan jumlah rating yang diberikan) yang dipertahankan. Pemilihan ini dilakukan agar model belajar dari pola perilaku pengguna yang memiliki cukup banyak data historis, sehingga pola rekomendasi lebih stabil
+5.    **Label Encoding** : Karena model akan menggunakan ID pengguna dan film sebagai input numerik, dilakukan proses **Label Encoding** pada kolom `UserID` dan `MovieID`. Teknik ini mengubah ID menjadi indeks integer yang dapat digunakan dalam lapisan embedding pada model neural network.
+6.    **Membagi Data menjadi Train dan Test** : Dataset kemudian dibagi menjadi dua bagian : **data latih (80%)** dan **data uji (20%)** menggunakan fungsi `train_test_split`. Tujuannya adalah untuk mengukur performa model dalam memprediksi rating pada data yang belum pernah dilihat selama pelatihan
+
+Seluruh tahapan ini dilakukan untuk memastikan bahwa data yang digunakan bersih, relevan, dan dalam format yang sesuai untuk digunakan oleh model Collaborative Filtering, sehingga proses pelatihan dapat berjalan optimal dan menghasilkan rekomendasi yang akurat
 
 Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam proyek ini :
 -    Menjamin **kebersihan dan konsistensi data** sebelum digunakan untuk pemodelan
@@ -86,36 +88,46 @@ Beberapa alasan utama mengapa proses _data preparation_ sangat penting dalam pro
 -    Menyesuaikan format data dengan kebutuhan algoritma, misalnya **TF-IDF** untuk CBF dan **user-item matrix** untuk CF
 
 ## Modelling
-Untuk menyelesaikan permasalah dalam proyek ini, dibangun dua model sistem rekomendasi dengan pendekatan yang berbeda, yaitu : 
--    **Content-Based Filtering (CBF)**
--    **Collaborative Filtering (CF)**
+Dalam proyek ini, sistem rekomendasi dibangun untuk membantu pengguna menemukan film yang relevan dan sesuai dengan preferensinya berdasarkan riwayat interaksi sebelumnya. Permasalahan yang ingin diselesaikan adalah bagaimana merekomendasikan film kepada pengguna dengan pendekatan **Collaborative Filtering berbasis model (Model-Based Collaborative Filtering)**. 
 
-Kedua model dirancang untuk menyarankan film kepada pengguna berdasarkan kriteria tertentu. Pendekatan CBF merekomendasikan film mirip dengan film yang disukai pengguna, sedangkan CF memanfaatkan pola perilaku pengguna lain yang serupa untuk memberikan rekomendasi. Dataset telah difilter menggunakan genre eksklusif dan hanya menyertakan 500 pengguna dengan aktivitas rating terbanyak untuk menjaga efisiensi memori 
+Model ini bekerja dengan cara mempelajari pola interaksi antara pengguna dan item (film) melalui teknik embedding. Setiap pengguna direpresentasikan sebagai vektor dalam ruang laten berdimensi tetap. Skor kecocokan antara pengguna dan film dihitung melalui operasi **dot product** dari vektor-vektor tersebut, dengan penambahan bias untuk memperbaiki hasil prediksi. Model ini dilatih menggunakan **Mean Absolute Error (MAE)** sebagai fungsi loss dan **Root Mean Squared Error (RMSE)** sebagai metrik evaluasi
 
-**Model 1 : Content-Based Filtering (CBF)** : Model CBF menghitung kemiripan antar film berdasarkan genre. Genre diformat ulang menjadi vektor TF-IDF, lalu dihitung kemiripannya menggunakan `linear_kernel`
+Contoh hasil rekomendasi / Top- N (UserID : 10): 
+1.    The Taming of the Shrew (1967)
+2.    The City of Lost Children (1995)
+3.    Central Station (Central do Brasil) (1998)
+4.    Places in the Heart (1984)
+5.    Once Were Warriors (1994)
 
-**Input** : _Film : Amadeus (1984)"_
+Setelah Proses pelatihan selesai, sistem digunakan untuk menghasilkan rekomendasi film bagi masing-masing pengguna. Rekomendasi dilakukan dengan cara menghitung skor prediksi terhadap semua film yang belum pernah ditonton oleh pengguna, kemudian memilih **Top-N** film dengan skor tertinggi. Output yang dihasilkan berupa daftar item (film) yang disarankan untuk setiap pengguna, yang dapat digunakan sebagai rekomendasi personal.
 
-**Output Rekomendasi :**
--    Pleasantville (1998)
--    Raising Arizona (1987)
--    White Men Can't Jump (1992)
--    Being John Malkovich (1999)
--    Fierce Creatures (1997)
+Kelebihan Collaborative Filtering :
+-    Dapat menangkap preferensi pengguna secara laten
+-    Tidak membutuhkan metadata atau konten film
+-    Dapat memberikan rekomendasi yang lebih bervariasi dan personal
+-    Cocok untuk dataset yang cukup besar dan memiliki banyak interaksi pengguna
 
-**Model 2 : Collaborative Filtering (CF)** : Model CF menggunakan pendekatan **User-Based Filtering**. Menggunakan user-item matrix dari 500 pengguna paling aktif, model menghitung kemiripan antar pengguna untuk memberikan rekomendasi berdasarkan perilaku rating pengguna serupa.
+Kekurangan Collaborative Filtering :
+-    Mengalami masalah **cold-start** untuk pengguna baru atau film baru yang belum memiliki cukup interaksi
+-    Performa menurun jika data rating yang tersedia terlalu sedikit (sparse)
+-    Membutuhkan proses training dan tuning yang lebih kompleks dibandingkan metode berbasis konten
 
-**Input** : _UserID : 26_
+# Evaluation
+Evaluasi dalam proyek sistem rekomendasi ini dilakukan untuk mengukur kinerja model Collaborative Filtering dalam memberikan rekomendasi yang relevan pada pengguna. Pemilihan metrik evaluasi sangat penting agar dapat mencerminkan seberapa baik model dalam menyelesaikan permasalahan yang telah dirumuskan pada tahap _Business Understanding_.
 
-**Output Rekomendasi :**
--    The Shawshank Redemption (1994)
--    One Flew Over the Cuckoo's Nest (1975)
--    Monty Pythin and the Holy Grail (1974)
--    Ferris Bueller's Day Off (1986)
--    Citizen Kane (1941)
+Untuk mengukur kinerja model, digunakan dua metrik evaluasi utama :
+1.    **Root Mean Squared Error (RMSE)**
+2.    **Mean Absolute Error (MAE)**
 
-| Pendekatan                  | Kelebihan                                                                                             | Kekurangan                                                              |
-|----------------------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| **Content-Based Filtering** | - Tidak memerlukan data pengguna lain <br> - Cocok untuk pengguna baru <br> - Proses cepat dan ringan | - Kurang variasi rekomendasi <br> - Terbatas pada informasi item saja   |
-| **Collaborative Filtering** | - Rekomendasi lebih bervariasi <br> - Menggali pola sosial pengguna                                   | - Membutuhkan banyak data rating <br> - Tidak cocok untuk pengguna baru |
+1.    **Root Mean Squared Error (RMSE)** : RMSE digunakan untuk mengukur seberapa jauh prediksi model dari nilai rating sebenarnya. Semakin kecil nilai RMSE, maka semakin baik kinerja model. RMSE memberikan penalti lebih besar terhadap prediksi yang jauh dari nilai sebenarnya, sehingga cocok untuk mengevaluasi sistem rekomendasi dimana kesalahan prediksi ekstrem harus diminimalkan
+2.    **Mean Absolute Error (MAE)** : MAE menghitung rata-rata dari selisih absolut antara rating aktual dan prediksi. Metrik ini digunakan untuk memberikan gambaran umum seberapa besar kesalahan prediksi tanpa memperbesar perspektif tambah terhadap kinerja model.
 
+Setelah dilakukan pelatihan model selama 100 epoch dengan pembagian data latih dan data uji sebesar 80:20, diperoleh hasil evaluasi sebagai berikut : 
+-    **RMSE pada data uji** : 0.7582
+-    **MAE pada data uji** : 0.6014
+
+Nilai ini menunjukkan bahwa model mampu memprediksi rating yang mendekati nilai aktual dengan kesalahan rata-rata dibawah 1 poin dari skala rating
+
+![Hasil Evaluasi Model](images/eval_result.png)
+
+Hasil evaluasi menunjukkan bahwa model Collaborative Filtering berbasis embedding cukup efektif dalam mempelajari preferensi pengguna dan membuat prediksi yang akurat. Meskipun masih terdapat ruang untuk peningkatan, seperti dengan menambahkan teknik regularisasi atau mengoptimalkan huperparameter, model ini sudah mampu memberikan rekomendasi awal yang dapat diterapkan untuk mendukung pengambilan keputusan pengguna.
